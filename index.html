@@ -1,0 +1,912 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- PWA SETTINGS -->
+    <meta name="theme-color" content="#1683ff">
+    <meta name="description" content="Smart offline personal expense manager">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Rishi Expense">
+
+    <title>Rishi Expense Manager</title>
+
+    <!-- PWA MANIFEST -->
+    <link rel="manifest" href="./manifest.json">
+
+    <!-- APP ICONS -->
+    <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="./icons/icon-512.png">
+    <link rel="apple-touch-icon" href="./icons/icon-192.png">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="./style.css">
+
+    <!-- PDF LIBRARIES -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.4/jspdf.plugin.autotable.min.js"></script>
+</head>
+
+<body>
+
+<div class="app">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+
+        <div class="sidebar-header">
+
+            <div class="logo">
+                <div class="logo-icon">₹</div>
+
+                <div>
+                    <h2>Rishi</h2>
+                    <span>Expense Manager</span>
+                </div>
+            </div>
+
+            <button class="close-sidebar" id="closeSidebar">×</button>
+
+        </div>
+
+        <nav class="menu">
+
+            <button class="menu-item active" data-page="dashboard">
+                <span>🏠</span><span>Dashboard</span>
+            </button>
+
+            <button class="menu-item" data-page="transactions">
+                <span>💳</span><span>Transactions</span>
+            </button>
+
+            <button class="menu-item" data-page="add">
+                <span>➕</span><span>Add Transaction</span>
+            </button>
+
+            <button class="menu-item" data-page="daily">
+                <span>📅</span><span>Daily</span>
+            </button>
+
+            <button class="menu-item" data-page="weekly">
+                <span>📆</span><span>Weekly</span>
+            </button>
+
+            <button class="menu-item" data-page="monthly">
+                <span>🗓️</span><span>Monthly</span>
+            </button>
+
+            <button class="menu-item" data-page="analytics">
+                <span>📊</span><span>Analytics</span>
+            </button>
+
+            <button class="menu-item" data-page="budgets">
+                <span>💰</span><span>Budgets</span>
+            </button>
+
+            <button class="menu-item" data-page="goals">
+                <span>🎯</span><span>Savings Goals</span>
+            </button>
+
+            <button class="menu-item" data-page="recurring">
+                <span>🔄</span><span>Recurring Payments</span>
+            </button>
+
+            <button class="menu-item" data-page="categories">
+                <span>🏷️</span><span>Categories</span>
+            </button>
+
+            <button class="menu-item" data-page="reports">
+                <span>📑</span><span>Reports</span>
+            </button>
+
+            <button class="menu-item" data-page="backup">
+                <span>💾</span><span>Backup & Restore</span>
+            </button>
+
+            <button class="menu-item" data-page="settings">
+                <span>⚙️</span><span>Settings</span>
+            </button>
+
+        </nav>
+
+        <div class="sidebar-bottom">
+
+            <button class="dark-toggle" id="darkToggle">
+                <span>🌙</span><span>Dark Mode</span>
+            </button>
+
+            <div class="storage-status">
+                <span class="status-dot"></span>
+                <span>Data stored locally</span>
+            </div>
+
+        </div>
+
+    </aside>
+
+    <!-- MAIN AREA -->
+    <div class="main-area">
+
+        <header class="topbar">
+
+            <button class="hamburger" id="openSidebar">☰</button>
+
+            <div class="page-heading">
+                <h1 id="pageTitle">Dashboard</h1>
+                <p id="pageSubtitle">Your financial overview</p>
+            </div>
+
+            <div class="top-actions">
+                <button class="quick-add" id="quickAdd">+ Add</button>
+            </div>
+
+        </header>
+
+        <main class="content">
+
+            <!-- DASHBOARD -->
+            <section class="page active" id="page-dashboard">
+
+                <div class="welcome-row">
+                    <div>
+                        <h2>Financial Overview</h2>
+                        <p>Track your money in one place.</p>
+                    </div>
+
+                    <button class="primary-btn" id="dashboardAdd">
+                        + Add Transaction
+                    </button>
+                </div>
+
+                <div class="balance-card">
+
+                    <div class="balance-main">
+                        <span>Current Balance</span>
+                        <h2 id="dashboardBalance">₹0.00</h2>
+                        <p id="balanceMessage">Your available money</p>
+                    </div>
+
+                    <button class="edit-balance-btn" id="editBalanceBtn">
+                        ✏ Edit Amount I Have
+                    </button>
+
+                </div>
+
+                <div class="stats-grid">
+
+                    <div class="stat-card">
+                        <span class="stat-icon">💰</span>
+                        <div>
+                            <span class="stat-label">Amount I Have</span>
+                            <strong id="startingAmount">₹0.00</strong>
+                        </div>
+                    </div>
+
+                    <div class="stat-card income-card">
+                        <span class="stat-icon">📈</span>
+                        <div>
+                            <span class="stat-label">Total Income</span>
+                            <strong id="totalIncome">₹0.00</strong>
+                        </div>
+                    </div>
+
+                    <div class="stat-card expense-card">
+                        <span class="stat-icon">📉</span>
+                        <div>
+                            <span class="stat-label">Total Expenses</span>
+                            <strong id="totalExpense">₹0.00</strong>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <span class="stat-icon">🧾</span>
+                        <div>
+                            <span class="stat-label">Transactions</span>
+                            <strong id="totalTransactions">0</strong>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="period-grid">
+
+                    <div class="period-card">
+                        <span>Today</span>
+                        <strong id="todayExpense">₹0.00</strong>
+                        <small>Expenses</small>
+                    </div>
+
+                    <div class="period-card">
+                        <span>This Week</span>
+                        <strong id="weekExpense">₹0.00</strong>
+                        <small>Expenses</small>
+                    </div>
+
+                    <div class="period-card">
+                        <span>This Month</span>
+                        <strong id="monthExpense">₹0.00</strong>
+                        <small>Expenses</small>
+                    </div>
+
+                    <div class="period-card">
+                        <span>This Year</span>
+                        <strong id="yearExpense">₹0.00</strong>
+                        <small>Expenses</small>
+                    </div>
+
+                </div>
+
+                <div class="dashboard-grid">
+
+                    <div class="panel">
+
+                        <div class="panel-header">
+                            <div>
+                                <h2>Recent Transactions</h2>
+                                <p>Your latest activity</p>
+                            </div>
+
+                            <button class="text-btn" data-page-link="transactions">
+                                View All
+                            </button>
+                        </div>
+
+                        <div id="recentTransactions"></div>
+
+                    </div>
+
+                    <div class="panel">
+
+                        <div class="panel-header">
+                            <div>
+                                <h2>Category Spending</h2>
+                                <p>Where your money goes</p>
+                            </div>
+                        </div>
+
+                        <div id="dashboardCategories"></div>
+
+                    </div>
+
+                </div>
+
+                <div class="panel">
+
+                    <div class="panel-header">
+                        <div>
+                            <h2>Financial Insights</h2>
+                            <p>Quick information about your spending</p>
+                        </div>
+                    </div>
+
+                    <div id="insights" class="insights-grid"></div>
+
+                </div>
+
+            </section>
+
+            <!-- TRANSACTIONS -->
+            <section class="page" id="page-transactions">
+
+                <div class="section-title">
+                    <div>
+                        <h2>Transaction Details</h2>
+                        <p>Search, filter and sort all your transactions.</p>
+                    </div>
+
+                    <button class="primary-btn" data-page-link="add">
+                        + Add Transaction
+                    </button>
+                </div>
+
+                <div class="filter-panel">
+
+                    <div class="filter-field search-field">
+                        <label>Search</label>
+                        <input type="text" id="searchInput"
+                            placeholder="Search merchant, note...">
+                    </div>
+
+                    <div class="filter-field">
+                        <label>Type</label>
+                        <select id="typeFilter">
+                            <option value="all">All Types</option>
+                            <option value="expense">Expenses</option>
+                            <option value="income">Income</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-field">
+                        <label>Category</label>
+                        <select id="categoryFilter">
+                            <option value="all">All Categories</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-field">
+                        <label>Period</label>
+                        <select id="periodFilter">
+                            <option value="all">All Time</option>
+                            <option value="today">Today</option>
+                            <option value="week">This Week</option>
+                            <option value="month">This Month</option>
+                            <option value="year">This Year</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-field">
+                        <label>Sort</label>
+                        <select id="sortFilter">
+                            <option value="newest">Newest First</option>
+                            <option value="oldest">Oldest First</option>
+                            <option value="highest">Highest Amount</option>
+                            <option value="lowest">Lowest Amount</option>
+                            <option value="az">A → Z</option>
+                        </select>
+                    </div>
+
+                </div>
+
+                <div class="transaction-toolbar">
+                    <div>
+                        <strong id="transactionCount">0</strong>
+                        <span>transactions found</span>
+                    </div>
+
+                    <button class="secondary-btn" id="exportPdfBtn">
+                        📄 Export PDF
+                    </button>
+                </div>
+
+                <div class="panel transaction-panel">
+                    <div id="transactionList"></div>
+                </div>
+
+            </section>
+
+            <!-- ADD TRANSACTION -->
+            <section class="page" id="page-add">
+
+                <div class="section-title">
+                    <div>
+                        <h2>Add Transaction</h2>
+                        <p>Record your income or expense.</p>
+                    </div>
+                </div>
+
+                <div class="form-panel">
+
+                    <form id="transactionForm">
+
+                        <div class="form-grid">
+
+                            <div class="form-group full">
+                                <label>Title / Merchant</label>
+                                <input type="text" id="title"
+                                    placeholder="e.g. Grocery Store" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Type</label>
+                                <select id="transactionType">
+                                    <option value="expense">Expense</option>
+                                    <option value="income">Income</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Amount</label>
+                                <input type="number" id="amount"
+                                    placeholder="0.00" min="0" step="0.01" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Category</label>
+                                <select id="category"></select>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Payment Method</label>
+                                <select id="paymentMethod">
+                                    <option>Cash</option>
+                                    <option>UPI</option>
+                                    <option>Debit Card</option>
+                                    <option>Credit Card</option>
+                                    <option>Bank Transfer</option>
+                                    <option>Other</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Date</label>
+                                <input type="date" id="date" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Time</label>
+                                <input type="time" id="time">
+                            </div>
+
+                            <div class="form-group full">
+                                <label>Note</label>
+                                <textarea id="note"
+                                    placeholder="Optional note..." rows="4"></textarea>
+                            </div>
+
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="primary-btn" id="submitBtn">
+                                Add Transaction
+                            </button>
+
+                            <button type="button"
+                                class="secondary-btn hidden" id="cancelEditBtn">
+                                Cancel Edit
+                            </button>
+                        </div>
+
+                    </form>
+
+                </div>
+
+            </section>
+
+            <!-- DAILY -->
+            <section class="page" id="page-daily">
+
+                <div class="section-title">
+                    <div>
+                        <h2>Daily Expenses</h2>
+                        <p>View today's financial activity.</p>
+                    </div>
+
+                    <input type="date" id="dailyDate" class="date-picker">
+                </div>
+
+                <div class="summary-cards">
+                    <div class="summary-card">
+                        <span>Income</span>
+                        <strong id="dailyIncome">₹0.00</strong>
+                    </div>
+
+                    <div class="summary-card">
+                        <span>Expenses</span>
+                        <strong id="dailyExpenses">₹0.00</strong>
+                    </div>
+
+                    <div class="summary-card">
+                        <span>Transactions</span>
+                        <strong id="dailyTransactions">0</strong>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div id="dailyList"></div>
+                </div>
+
+            </section>
+
+            <!-- WEEKLY -->
+            <section class="page" id="page-weekly">
+
+                <div class="section-title">
+                    <div>
+                        <h2>Weekly Summary</h2>
+                        <p>Track your spending week by week.</p>
+                    </div>
+                </div>
+
+                <div class="summary-cards">
+                    <div class="summary-card">
+                        <span>Weekly Income</span>
+                        <strong id="weeklyIncome">₹0.00</strong>
+                    </div>
+
+                    <div class="summary-card">
+                        <span>Weekly Expenses</span>
+                        <strong id="weeklyExpenses">₹0.00</strong>
+                    </div>
+
+                    <div class="summary-card">
+                        <span>Weekly Savings</span>
+                        <strong id="weeklySavings">₹0.00</strong>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-header">
+                        <div>
+                            <h2>Last 7 Days</h2>
+                            <p>Daily spending breakdown</p>
+                        </div>
+                    </div>
+
+                    <div id="weeklyBreakdown"></div>
+                </div>
+
+            </section>
+
+            <!-- MONTHLY -->
+            <section class="page" id="page-monthly">
+
+                <div class="section-title">
+                    <div>
+                        <h2>Monthly Summary</h2>
+                        <p>Understand your monthly finances.</p>
+                    </div>
+
+                    <input type="month" id="monthlyMonth" class="date-picker">
+                </div>
+
+                <div class="summary-cards">
+                    <div class="summary-card">
+                        <span>Monthly Income</span>
+                        <strong id="monthlyIncome">₹0.00</strong>
+                    </div>
+
+                    <div class="summary-card">
+                        <span>Monthly Expenses</span>
+                        <strong id="monthlyExpenses">₹0.00</strong>
+                    </div>
+
+                    <div class="summary-card">
+                        <span>Monthly Savings</span>
+                        <strong id="monthlySavings">₹0.00</strong>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-header">
+                        <div>
+                            <h2>Monthly Transactions</h2>
+                            <p>All transactions for the selected month</p>
+                        </div>
+                    </div>
+
+                    <div id="monthlyList"></div>
+                </div>
+
+            </section>
+
+            <!-- ANALYTICS -->
+            <section class="page" id="page-analytics">
+
+                <div class="section-title">
+                    <div>
+                        <h2>Analytics</h2>
+                        <p>Understand your financial patterns.</p>
+                    </div>
+                </div>
+
+                <div class="analytics-grid">
+
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h2>Monthly Spending</h2>
+                        </div>
+                        <div id="monthlyChart" class="bar-chart"></div>
+                    </div>
+
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h2>Category Spending</h2>
+                        </div>
+                        <div id="categoryChart"></div>
+                    </div>
+
+                </div>
+
+                <div class="panel">
+                    <div class="panel-header">
+                        <h2>Income vs Expenses</h2>
+                    </div>
+                    <div id="incomeExpenseChart"></div>
+                </div>
+
+            </section>
+
+            <!-- BUDGETS -->
+            <section class="page" id="page-budgets">
+
+                <div class="section-title">
+                    <div>
+                        <h2>Budgets</h2>
+                        <p>Set limits for your spending.</p>
+                    </div>
+
+                    <button class="primary-btn" id="addBudgetBtn">
+                        + Add Budget
+                    </button>
+                </div>
+
+                <div id="budgetList" class="card-grid"></div>
+
+            </section>
+
+            <!-- GOALS -->
+            <section class="page" id="page-goals">
+
+                <div class="section-title">
+                    <div>
+                        <h2>Savings Goals</h2>
+                        <p>Track what you are saving for.</p>
+                    </div>
+
+                    <button class="primary-btn" id="addGoalBtn">
+                        + Add Goal
+                    </button>
+                </div>
+
+                <div id="goalList" class="card-grid"></div>
+
+            </section>
+
+            <!-- RECURRING -->
+            <section class="page" id="page-recurring">
+
+                <div class="section-title">
+                    <div>
+                        <h2>Recurring Payments</h2>
+                        <p>Keep track of regular payments.</p>
+                    </div>
+
+                    <button class="primary-btn" id="addRecurringBtn">
+                        + Add Payment
+                    </button>
+                </div>
+
+                <div id="recurringList" class="card-grid"></div>
+
+            </section>
+
+            <!-- CATEGORIES -->
+            <section class="page" id="page-categories">
+
+                <div class="section-title">
+                    <div>
+                        <h2>Categories</h2>
+                        <p>Organize your transactions.</p>
+                    </div>
+
+                    <button class="primary-btn" id="addCategoryBtn">
+                        + Add Category
+                    </button>
+                </div>
+
+                <div id="categoryList" class="category-grid"></div>
+
+            </section>
+
+            <!-- REPORTS -->
+            <section class="page" id="page-reports">
+
+                <div class="section-title">
+                    <div>
+                        <h2>Reports</h2>
+                        <p>Generate financial reports.</p>
+                    </div>
+                </div>
+
+                <div class="report-actions">
+
+                    <button class="report-card" id="reportPdfBtn">
+                        <span>📄</span>
+                        <div>
+                            <strong>PDF Report</strong>
+                            <small>Download detailed PDF</small>
+                        </div>
+                    </button>
+
+                    <button class="report-card" id="reportCsvBtn">
+                        <span>📊</span>
+                        <div>
+                            <strong>CSV Report</strong>
+                            <small>Export spreadsheet data</small>
+                        </div>
+                    </button>
+
+                    <button class="report-card" id="printReportBtn">
+                        <span>🖨️</span>
+                        <div>
+                            <strong>Print Report</strong>
+                            <small>Print your financial report</small>
+                        </div>
+                    </button>
+
+                </div>
+
+                <div class="panel">
+                    <div class="panel-header">
+                        <h2>Report Preview</h2>
+                    </div>
+                    <div id="reportPreview"></div>
+                </div>
+
+            </section>
+
+            <!-- BACKUP -->
+            <section class="page" id="page-backup">
+
+                <div class="section-title">
+                    <div>
+                        <h2>Backup & Restore</h2>
+                        <p>Protect your expense data.</p>
+                    </div>
+                </div>
+
+                <div class="backup-grid">
+
+                    <div class="backup-card">
+                        <span>💾</span>
+                        <h3>Backup Data</h3>
+                        <p>Download all your transactions, budgets and goals.</p>
+                        <button class="primary-btn" id="backupBtn">
+                            Download Backup
+                        </button>
+                    </div>
+
+                    <div class="backup-card">
+                        <span>📥</span>
+                        <h3>Restore Data</h3>
+                        <p>Restore previously saved data.</p>
+
+                        <input type="file" id="restoreFile"
+                            accept=".json" hidden>
+
+                        <button class="secondary-btn" id="restoreBtn">
+                            Restore Backup
+                        </button>
+                    </div>
+
+                    <div class="backup-card danger-card">
+                        <span>🗑️</span>
+                        <h3>Delete All Data</h3>
+                        <p>Permanently clear local expense data.</p>
+                        <button class="danger-btn" id="clearDataBtn">
+                            Delete Data
+                        </button>
+                    </div>
+
+                </div>
+
+            </section>
+
+            <!-- SETTINGS -->
+            <section class="page" id="page-settings">
+
+                <div class="section-title">
+                    <div>
+                        <h2>Settings</h2>
+                        <p>Customize your Expense Manager.</p>
+                    </div>
+                </div>
+
+                <div class="settings-panel">
+
+                    <div class="setting-row">
+                        <div>
+                            <strong>Currency</strong>
+                            <p>Choose the currency shown in the app.</p>
+                        </div>
+
+                        <select id="currencySetting">
+                            <option value="₹">₹ INR</option>
+                            <option value="$">$ USD</option>
+                            <option value="€">€ EUR</option>
+                            <option value="£">£ GBP</option>
+                        </select>
+                    </div>
+
+                    <div class="setting-row">
+                        <div>
+                            <strong>Dark Mode</strong>
+                            <p>Switch between light and dark themes.</p>
+                        </div>
+
+                        <button class="secondary-btn" id="settingsDarkBtn">
+                            Toggle Theme
+                        </button>
+                    </div>
+
+                </div>
+
+            </section>
+
+        </main>
+
+    </div>
+
+</div>
+
+<!-- BALANCE MODAL -->
+<div class="modal-overlay" id="balanceModal">
+
+    <div class="modal">
+
+        <button class="close-modal" id="closeBalanceModal">×</button>
+
+        <div class="modal-icon">💰</div>
+
+        <h2>Amount I Have</h2>
+
+        <p>Enter the amount of money you currently have.</p>
+
+        <div class="form-group">
+            <label>Current Amount</label>
+            <input type="number" id="startingBalanceInput"
+                min="0" step="0.01" placeholder="50000">
+        </div>
+
+        <div class="modal-actions">
+            <button class="secondary-btn" id="cancelBalance">
+                Cancel
+            </button>
+
+            <button class="primary-btn" id="saveBalance">
+                Save Amount
+            </button>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- GENERAL MODAL -->
+<div class="modal-overlay" id="generalModal">
+
+    <div class="modal">
+
+        <button class="close-modal" id="closeGeneralModal">×</button>
+
+        <div id="generalModalContent"></div>
+
+    </div>
+
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+    Saved successfully
+</div>
+
+<!-- MAIN JAVASCRIPT -->
+<script src="./script.js"></script>
+
+<!-- SERVICE WORKER REGISTRATION -->
+<script>
+if ("serviceWorker" in navigator) {
+
+    window.addEventListener("load", async () => {
+
+        try {
+
+            const registration =
+                await navigator.serviceWorker.register("./sw.js");
+
+            console.log(
+                "Rishi Expense Manager Service Worker registered:",
+                registration.scope
+            );
+
+        } catch (error) {
+
+            console.error(
+                "Service Worker registration failed:",
+                error
+            );
+
+        }
+
+    });
+
+}
+</script>
+
+</body>
+</html>
+```
