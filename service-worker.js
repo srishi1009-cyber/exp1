@@ -1,4 +1,4 @@
-const CACHE_NAME = "rishi-expense-manager-v2";
+const CACHE_NAME = "rishi-expense-manager-v3";
 
 const FILES_TO_CACHE = [
     "./",
@@ -10,36 +10,51 @@ const FILES_TO_CACHE = [
     "./icons/icon-512.png"
 ];
 
-// INSTALL SERVICE WORKER
+// INSTALL
 self.addEventListener("install", event => {
+
     event.waitUntil(
-        caches.open(CACHE_NAME).then(async cache => {
-            await cache.addAll(FILES_TO_CACHE);
-        })
+        (async () => {
+
+            const cache = await caches.open(CACHE_NAME);
+
+            // Cache available files without failing the entire installation
+            await Promise.allSettled(
+                FILES_TO_CACHE.map(file => cache.add(file))
+            );
+
+            await self.skipWaiting();
+
+        })()
     );
 
-    self.skipWaiting();
 });
 
-// ACTIVATE SERVICE WORKER
+// ACTIVATE
 self.addEventListener("activate", event => {
+
     event.waitUntil(
-        caches.keys().then(keys =>
-            Promise.all(
-                keys
+        (async () => {
+
+            const cacheKeys = await caches.keys();
+
+            await Promise.all(
+                cacheKeys
                     .filter(key =>
                         key.startsWith("rishi-expense-manager-") &&
                         key !== CACHE_NAME
                     )
                     .map(key => caches.delete(key))
-            )
-        )
+            );
+
+            await self.clients.claim();
+
+        })()
     );
 
-    self.clients.claim();
 });
 
-// FETCH AND OFFLINE SUPPORT
+// FETCH
 self.addEventListener("fetch", event => {
 
     const request = event.request;
@@ -49,14 +64,47 @@ self.addEventListener("fetch", event => {
 
     const url = new URL(request.url);
 
-    // Only handle requests from this website
+    // Only handle this website's requests
     if (url.origin !== self.location.origin) return;
+
+    // Ignore unsupported protocols
+    if (url.protocol !== "https:" && url.protocol !== "http:") return;
 
     event.respondWith(
         (async () => {
 
-            // Check cache first
-            const cachedResponse = await caches.match(request);
+            const cache = await caches.open(CACHE_NAME);
+
+            // HTML navigation: network first
+            if (request.mode === "navigate") {
+
+                try {
+
+                    const response = await fetch(request);
+
+                    if (response.ok) {
+                        await cache.put(request, response.clone());
+                    }
+
+                    return response;
+
+                } catch (error) {
+
+                    return (
+                        await cache.match(request)
+                    ) || (
+                        await cache.match("./index.html")
+                    ) || new Response(
+                        "App unavailable offline.",
+                        { status: 503 }
+                    );
+
+                }
+
+            }
+
+            // Other files: cache first
+            const cachedResponse = await cache.match(request);
 
             if (cachedResponse) {
                 return cachedResponse;
@@ -64,39 +112,23 @@ self.addEventListener("fetch", event => {
 
             try {
 
-                // Get file from network
-                const networkResponse = await fetch(request);
+                const response = await fetch(request);
 
-                // Cache successful static files
-                if (networkResponse && networkResponse.ok) {
+                if (response.ok) {
 
-                    const cache = await caches.open(CACHE_NAME);
+                    await cache.put(
+                        request,
+                        response.clone()
+                    );
 
-                    if (
-                        request.destination === "document" ||
-                        request.destination === "script" ||
-                        request.destination === "style" ||
-                        request.destination === "image" ||
-                        url.pathname.endsWith(".json")
-                    ) {
-                        await cache.put(
-                            request,
-                            networkResponse.clone()
-                        );
-                    }
                 }
 
-                return networkResponse;
+                return response;
 
             } catch (error) {
 
-                // Show cached homepage when offline
-                if (request.mode === "navigate") {
-                    return caches.match("./index.html");
-                }
-
                 return new Response(
-                    "You are offline. Please reconnect to the internet.",
+                    "You are offline. Please reconnect.",
                     {
                         status: 503,
                         headers: {
@@ -104,7 +136,10 @@ self.addEventListener("fetch", event => {
                         }
                     }
                 );
+
             }
+
         })()
     );
+
 });
